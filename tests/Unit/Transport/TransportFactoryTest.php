@@ -7,7 +7,7 @@ namespace Answear\MessengerHeartbeatBundle\Tests\Unit\Transport;
 use Answear\MessengerHeartbeatBundle\Heartbeat\PCNTLHeartbeatSender;
 use Answear\MessengerHeartbeatBundle\Transport\AmqpTransport;
 use Answear\MessengerHeartbeatBundle\Transport\TransportFactory;
-use Monolog\Test\TestCase;
+use PHPUnit\Framework\TestCase;
 use Symfony\Component\Messenger\Bridge\Amqp\Transport\Connection;
 use Symfony\Component\Messenger\Transport\Serialization\SerializerInterface;
 
