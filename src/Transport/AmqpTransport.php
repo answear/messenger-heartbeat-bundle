@@ -38,6 +38,13 @@ class AmqpTransport extends BaseAmqpTransport implements HeartbeatConnectionInte
     public function sendHeartbeat(): void
     {
         try {
+            if (\property_exists($this->connection, 'lastActivityTime')) {
+                $reflection = new \ReflectionClass($this->connection);
+                $property = $reflection->getProperty('lastActivityTime');
+                $property->setAccessible(true);
+                $property->setValue($this->connection, time());
+            }
+
             $this->getMessageCount();
         } catch (\Throwable $throwable) {
             if ($throwable instanceof TransportException || $throwable->getPrevious() instanceof TransportException) {
