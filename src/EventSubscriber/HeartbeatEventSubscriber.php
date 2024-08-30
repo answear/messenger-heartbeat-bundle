@@ -16,9 +16,6 @@ class HeartbeatEventSubscriber implements EventSubscriberInterface
     ) {
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public static function getSubscribedEvents(): array
     {
         return [
