@@ -6,15 +6,14 @@ namespace Answear\MessengerHeartbeatBundle\Tests\Unit\Transport;
 
 use Answear\MessengerHeartbeatBundle\Heartbeat\PCNTLHeartbeatSender;
 use Answear\MessengerHeartbeatBundle\Transport\AmqpTransport;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Messenger\Bridge\Amqp\Transport\Connection;
 use Symfony\Component\Messenger\Transport\Serialization\SerializerInterface;
 
 class TransportTest extends TestCase
 {
-    /**
-     * @test
-     */
+    #[Test]
     public function heartbeatRegistered(): void
     {
         $heartbeatSender = $this->createMock(PCNTLHeartbeatSender::class);
@@ -33,9 +32,7 @@ class TransportTest extends TestCase
         $transport->registerHeartbeatSender();
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function getHeartbeat(): void
     {
         $amqpConnection = $this->createMock(\AMQPConnection::class);

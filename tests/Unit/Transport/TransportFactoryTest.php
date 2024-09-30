@@ -7,17 +7,16 @@ namespace Answear\MessengerHeartbeatBundle\Tests\Unit\Transport;
 use Answear\MessengerHeartbeatBundle\Heartbeat\PCNTLHeartbeatSender;
 use Answear\MessengerHeartbeatBundle\Transport\AmqpTransport;
 use Answear\MessengerHeartbeatBundle\Transport\TransportFactory;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Messenger\Bridge\Amqp\Transport\Connection;
 use Symfony\Component\Messenger\Transport\Serialization\SerializerInterface;
 
 class TransportFactoryTest extends TestCase
 {
-    /**
-     * @test
-     *
-     * @dataProvider provideSupportedScheme
-     */
+    #[Test]
+    #[DataProvider('provideSupportedScheme')]
     public function supportsValidScheme(string $dsn): void
     {
         $factory = new TransportFactory($this->createMock(PCNTLHeartbeatSender::class));
@@ -25,11 +24,8 @@ class TransportFactoryTest extends TestCase
         $this->assertTrue($factory->supports($dsn, []));
     }
 
-    /**
-     * @test
-     *
-     * @dataProvider provideTransportData
-     */
+    #[Test]
+    #[DataProvider('provideTransportData')]
     public function validTransport(string $dsn, array $options, array $expectedOptions): void
     {
         $factory = new TransportFactory($this->createMock(PCNTLHeartbeatSender::class));
@@ -41,13 +37,13 @@ class TransportFactoryTest extends TestCase
         $this->assertSame($expectedOptions, $this->getInnerProperty($connection, 'connectionOptions'));
     }
 
-    public function provideSupportedScheme(): iterable
+    public static function provideSupportedScheme(): iterable
     {
         yield 'amqp' => ['amqp://host'];
         yield 'amqps' => ['amqps://host'];
     }
 
-    public function provideTransportData(): iterable
+    public static function provideTransportData(): iterable
     {
         yield 'defaultWithReadTimeout' => [
             'amqp://rabbit-is-dead.elmer?read_timeout=1',
