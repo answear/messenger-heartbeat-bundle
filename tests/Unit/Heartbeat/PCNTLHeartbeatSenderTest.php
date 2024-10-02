@@ -6,13 +6,12 @@ namespace Answear\MessengerHeartbeatBundle\Tests\Unit\Heartbeat;
 
 use Answear\MessengerHeartbeatBundle\Heartbeat\PCNTLHeartbeatSender;
 use Answear\MessengerHeartbeatBundle\Transport\HeartbeatConnectionInterface;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 class PCNTLHeartbeatSenderTest extends TestCase
 {
-    /**
-     * @test
-     */
+    #[Test]
     public function registeredChecksConnectionAndHeartbeatValue(): void
     {
         $connection = $this->createMock(HeartbeatConnectionInterface::class);
@@ -26,9 +25,7 @@ class PCNTLHeartbeatSenderTest extends TestCase
         $heartbeatSender->register();
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function errorConnectionInactive(): void
     {
         $this->expectException(\AMQPConnectionException::class);
