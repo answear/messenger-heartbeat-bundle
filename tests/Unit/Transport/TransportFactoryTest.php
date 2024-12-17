@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Answear\MessengerHeartbeatBundle\Tests\Unit\Transport;
 
-use Answear\MessengerHeartbeatBundle\Heartbeat\PCNTLHeartbeatSender;
 use Answear\MessengerHeartbeatBundle\Transport\AmqpTransport;
 use Answear\MessengerHeartbeatBundle\Transport\TransportFactory;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -19,7 +18,7 @@ class TransportFactoryTest extends TestCase
     #[DataProvider('provideSupportedScheme')]
     public function supportsValidScheme(string $dsn): void
     {
-        $factory = new TransportFactory($this->createMock(PCNTLHeartbeatSender::class));
+        $factory = new TransportFactory();
 
         $this->assertTrue($factory->supports($dsn, []));
     }
@@ -28,7 +27,7 @@ class TransportFactoryTest extends TestCase
     #[DataProvider('provideTransportData')]
     public function validTransport(string $dsn, array $options, array $expectedOptions): void
     {
-        $factory = new TransportFactory($this->createMock(PCNTLHeartbeatSender::class));
+        $factory = new TransportFactory();
         $transport = $factory->createTransport($dsn, $options, $this->createMock(SerializerInterface::class));
         $connection = $this->getInnerProperty($transport, 'connection');
 
@@ -80,7 +79,6 @@ class TransportFactoryTest extends TestCase
     {
         $reflection = new \ReflectionClass($object);
         $reflectionProperty = $reflection->getProperty($reflectionProperty);
-        $reflectionProperty->setAccessible(true);
 
         return $reflectionProperty->getValue($object);
     }

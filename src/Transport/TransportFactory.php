@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Answear\MessengerHeartbeatBundle\Transport;
 
-use Answear\MessengerHeartbeatBundle\Heartbeat\PCNTLHeartbeatSender;
 use Symfony\Component\Messenger\Bridge\Amqp\Transport\AmqpTransportFactory;
 use Symfony\Component\Messenger\Bridge\Amqp\Transport\Connection;
 use Symfony\Component\Messenger\Transport\Serialization\SerializerInterface;
@@ -13,16 +12,11 @@ use Symfony\Component\Messenger\Transport\TransportInterface;
 
 class TransportFactory implements TransportFactoryInterface
 {
-    public function __construct(
-        private PCNTLHeartbeatSender $heartbeatSender,
-    ) {
-    }
-
-    public function createTransport(string $dsn, array $options, SerializerInterface $serializer): TransportInterface
+    public function createTransport(#[\SensitiveParameter] string $dsn, array $options, SerializerInterface $serializer): TransportInterface
     {
         unset($options['transport_name']);
 
-        return new AmqpTransport(Connection::fromDsn($dsn, $options), $this->heartbeatSender, $serializer);
+        return new AmqpTransport(Connection::fromDsn($dsn, $options), $serializer);
     }
 
     public function supports(string $dsn, array $options): bool
