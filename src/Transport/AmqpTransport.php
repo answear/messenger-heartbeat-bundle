@@ -16,7 +16,7 @@ class AmqpTransport extends BaseAmqpTransport implements HeartbeatConnectionInte
     public function __construct(
         private Connection $connection,
         private PCNTLHeartbeatSender $heartbeatSender,
-        SerializerInterface $serializer
+        SerializerInterface $serializer,
     ) {
         parent::__construct($this->connection, $serializer);
     }
@@ -38,12 +38,9 @@ class AmqpTransport extends BaseAmqpTransport implements HeartbeatConnectionInte
     public function sendHeartbeat(): void
     {
         try {
-            if (\property_exists($this->connection, 'lastActivityTime')) {
-                $reflection = new \ReflectionClass($this->connection);
-                $property = $reflection->getProperty('lastActivityTime');
-                $property->setAccessible(true);
-                $property->setValue($this->connection, time());
-            }
+            $reflection = new \ReflectionClass($this->connection);
+            $property = $reflection->getProperty('lastActivityTime');
+            $property->setValue($this->connection, time());
 
             $this->getMessageCount();
         } catch (\Throwable $throwable) {

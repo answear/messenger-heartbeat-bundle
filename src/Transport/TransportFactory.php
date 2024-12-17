@@ -14,7 +14,7 @@ use Symfony\Component\Messenger\Transport\TransportInterface;
 class TransportFactory implements TransportFactoryInterface
 {
     public function __construct(
-        private PCNTLHeartbeatSender $heartbeatSender
+        private PCNTLHeartbeatSender $heartbeatSender,
     ) {
     }
 

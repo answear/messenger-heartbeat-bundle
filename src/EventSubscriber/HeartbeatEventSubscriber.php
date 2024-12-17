@@ -12,7 +12,7 @@ use Symfony\Component\Messenger\Event\WorkerStartedEvent;
 class HeartbeatEventSubscriber implements EventSubscriberInterface
 {
     public function __construct(
-        private ContainerInterface $receiverLocator
+        private ContainerInterface $receiverLocator,
     ) {
     }
 

@@ -15,7 +15,7 @@ use Symfony\Component\Messenger\Stamp\ErrorDetailsStamp;
 class SendFailedMessageToFailureTransportListener implements EventSubscriberInterface
 {
     public function __construct(
-        private SymfonyFailedTransportListener $decoratedSubscriber
+        private SymfonyFailedTransportListener $decoratedSubscriber,
     ) {
     }
 
