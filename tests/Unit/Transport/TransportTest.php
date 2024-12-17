@@ -4,61 +4,53 @@ declare(strict_types=1);
 
 namespace Answear\MessengerHeartbeatBundle\Tests\Unit\Transport;
 
-use Answear\MessengerHeartbeatBundle\Heartbeat\PCNTLHeartbeatSender;
 use Answear\MessengerHeartbeatBundle\Transport\AmqpTransport;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use Symfony\Bridge\PhpUnit\ClockMock;
+use Symfony\Component\Messenger\Bridge\Amqp\Transport\AmqpFactory;
 use Symfony\Component\Messenger\Bridge\Amqp\Transport\Connection;
+use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Transport\Serialization\SerializerInterface;
 
 class TransportTest extends TestCase
 {
-    #[Test]
-    public function heartbeatRegistered(): void
+    protected function setUp(): void
     {
-        $heartbeatSender = $this->createMock(PCNTLHeartbeatSender::class);
-        $heartbeatSender->expects($this->once())
-            ->method('createForConnection')
-            ->willReturn($heartbeatSender);
-        $heartbeatSender->expects($this->once())
-            ->method('register');
-
-        $transport = new AmqpTransport(
-            $this->createMock(Connection::class),
-            $heartbeatSender,
-            $this->createMock(SerializerInterface::class),
-        );
-
-        $transport->registerHeartbeatSender();
+        parent::setUp();
     }
 
     #[Test]
-    public function getHeartbeat(): void
+    public function keepaliveCallTest(): void
     {
-        $amqpConnection = $this->createMock(\AMQPConnection::class);
-        $amqpConnection->expects($this->once())
-            ->method('getHeartbeatInterval')
-            ->willReturn(30);
+        $time = strtotime('2024-09-17 09:00:00');
+        ClockMock::withClockMock($time);
+
         $queue = $this->createMock(\AMQPQueue::class);
         $queue->expects($this->once())
-            ->method('getConnection')
-            ->willReturn($amqpConnection);
+            ->method('declareQueue')
+            ->willReturn(21);
 
-        $connection = $this->createMock(Connection::class);
-        $connection->expects($this->once())
-            ->method('getQueueNames')
-            ->willReturn(['fakeQueue']);
-        $connection->expects($this->once())
-            ->method('queue')
-            ->with('fakeQueue')
+        $amqpFactory = $this->createMock(AmqpFactory::class);
+        $amqpFactory->method('createQueue')
             ->willReturn($queue);
+
+        $connection = new Connection([], [], ['queueName1' => []], $amqpFactory);
+        $reflection = new \ReflectionClass($connection);
+
+        $property = $reflection->getProperty('lastActivityTime');
+        self::assertSame(0, $property->getValue($connection));
 
         $transport = new AmqpTransport(
             $connection,
-            $this->createMock(PCNTLHeartbeatSender::class),
             $this->createMock(SerializerInterface::class),
         );
 
-        $this->assertSame(30, $transport->getHeartbeat());
+        $transport->keepalive(new Envelope(new \stdClass()));
+
+        $property = $reflection->getProperty('lastActivityTime');
+        self::assertGreaterThan(0, $property->getValue($connection));
+
+        ClockMock::withClockMock(false);
     }
 }

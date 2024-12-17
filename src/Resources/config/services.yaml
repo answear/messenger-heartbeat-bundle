@@ -3,12 +3,6 @@ services:
         autowire: true
         autoconfigure: true
 
-    Answear\MessengerHeartbeatBundle\EventSubscriber\HeartbeatEventSubscriber:
-        arguments:
-            $receiverLocator: '@messenger.receiver_locator'
-
-    Answear\MessengerHeartbeatBundle\Heartbeat\PCNTLHeartbeatSender: ~
-
     Answear\MessengerHeartbeatBundle\Transport\TransportFactory:
         decorates: 'messenger.transport.amqp.factory'
         tags:
@@ -17,5 +11,3 @@ services:
     Answear\MessengerHeartbeatBundle\EventSubscriber\SendFailedMessageToFailureTransportListener:
         decorates: 'messenger.failure.send_failed_message_to_failure_transport_listener'
         arguments: ['@.inner']
-
-    Answear\MessengerHeartbeatBundle\Middleware\TransportExceptionsMiddleware: ~

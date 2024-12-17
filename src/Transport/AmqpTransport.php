@@ -5,37 +5,23 @@ declare(strict_types=1);
 namespace Answear\MessengerHeartbeatBundle\Transport;
 
 use Answear\MessengerHeartbeatBundle\Exception\HeartbeatConnectionLostException;
-use Answear\MessengerHeartbeatBundle\Heartbeat\PCNTLHeartbeatSender;
 use Symfony\Component\Messenger\Bridge\Amqp\Transport\AmqpTransport as BaseAmqpTransport;
 use Symfony\Component\Messenger\Bridge\Amqp\Transport\Connection;
+use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Exception\TransportException;
+use Symfony\Component\Messenger\Transport\Receiver\KeepaliveReceiverInterface;
 use Symfony\Component\Messenger\Transport\Serialization\SerializerInterface;
 
-class AmqpTransport extends BaseAmqpTransport implements HeartbeatConnectionInterface
+class AmqpTransport extends BaseAmqpTransport implements KeepaliveReceiverInterface
 {
     public function __construct(
         private Connection $connection,
-        private PCNTLHeartbeatSender $heartbeatSender,
         SerializerInterface $serializer,
     ) {
         parent::__construct($this->connection, $serializer);
     }
 
-    public function isConnected(): bool
-    {
-        try {
-            return $this->getQueue()->getConnection()->isConnected();
-        } catch (\AMQPConnectionException) {
-            return false;
-        }
-    }
-
-    public function getHeartbeat(): int
-    {
-        return $this->getQueue()->getConnection()->getHeartbeatInterval();
-    }
-
-    public function sendHeartbeat(): void
+    public function keepalive(Envelope $envelope, ?int $seconds = null): void
     {
         try {
             $reflection = new \ReflectionClass($this->connection);
@@ -50,17 +36,19 @@ class AmqpTransport extends BaseAmqpTransport implements HeartbeatConnectionInte
         }
     }
 
-    public function registerHeartbeatSender(): void
+    public function getKeepaliveInterval(): int
     {
-        $this->heartbeatSender->createForConnection($this)->register();
+        return $this->getQueue()->getConnection()->getHeartbeatInterval();
     }
 
     private function getQueue(): \AMQPQueue
     {
-        foreach ($this->connection->getQueueNames() as $queueName) {
-            return $this->connection->queue($queueName);
-        }
+        try {
+            $queueNames = $this->connection->getQueueNames();
 
-        throw new \AMQPConnectionException('Connection without queue');
+            return $this->connection->queue(reset($queueNames));
+        } catch (\Throwable $throwable) {
+            throw new \AMQPConnectionException('Connection without queue.', $throwable->getCode(), $throwable);
+        }
     }
 }
