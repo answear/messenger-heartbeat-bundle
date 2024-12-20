@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace Answear\MessengerHeartbeatBundle\Transport;
 
-use Answear\MessengerHeartbeatBundle\Exception\HeartbeatConnectionLostException;
+use Answear\MessengerHeartbeatBundle\Exception\KeepaliveException;
 use Symfony\Component\Messenger\Bridge\Amqp\Transport\AmqpTransport as BaseAmqpTransport;
 use Symfony\Component\Messenger\Bridge\Amqp\Transport\Connection;
 use Symfony\Component\Messenger\Envelope;
-use Symfony\Component\Messenger\Exception\TransportException;
 use Symfony\Component\Messenger\Transport\Receiver\KeepaliveReceiverInterface;
 use Symfony\Component\Messenger\Transport\Serialization\SerializerInterface;
 
@@ -30,9 +29,7 @@ class AmqpTransport extends BaseAmqpTransport implements KeepaliveReceiverInterf
 
             $this->getMessageCount();
         } catch (\Throwable $throwable) {
-            if ($throwable instanceof TransportException || $throwable->getPrevious() instanceof TransportException) {
-                throw HeartbeatConnectionLostException::createException($throwable);
-            }
+            throw KeepaliveException::createException($throwable);
         }
     }
 
