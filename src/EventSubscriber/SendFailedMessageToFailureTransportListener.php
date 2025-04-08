@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Answear\MessengerHeartbeatBundle\EventSubscriber;
 
 use Answear\MessengerHeartbeatBundle\Exception\HeartbeatConnectionLostException;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\ErrorHandler\Exception\FlattenException;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\Messenger\Event\WorkerMessageFailedEvent;
@@ -15,7 +16,8 @@ use Symfony\Component\Messenger\Stamp\ErrorDetailsStamp;
 class SendFailedMessageToFailureTransportListener implements EventSubscriberInterface
 {
     public function __construct(
-        private SymfonyFailedTransportListener $decoratedSubscriber
+        private SymfonyFailedTransportListener $decoratedSubscriber,
+        private ?LoggerInterface $logger = null,
     ) {
     }
 
@@ -30,6 +32,8 @@ class SendFailedMessageToFailureTransportListener implements EventSubscriberInte
         }
 
         if (null !== $errorStamp && HeartbeatConnectionLostException::class === $errorStamp->getExceptionClass()) {
+            $this->logger?->info('Skip message with HeartbeatConnectionLostException from failure transport.');
+
             return;
         }
 
@@ -39,6 +43,8 @@ class SendFailedMessageToFailureTransportListener implements EventSubscriberInte
             if ($flattenException instanceof FlattenException) {
                 foreach ($flattenException->getAllPrevious() as $previous) {
                     if (HeartbeatConnectionLostException::class === $previous->getClass()) {
+                        $this->logger?->info('Skip message with HeartbeatConnectionLostException from failure transport by FlattenException.');
+
                         return;
                     }
                 }

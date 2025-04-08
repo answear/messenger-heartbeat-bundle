@@ -6,6 +6,7 @@ namespace Answear\MessengerHeartbeatBundle\Transport;
 
 use Answear\MessengerHeartbeatBundle\Exception\HeartbeatConnectionLostException;
 use Answear\MessengerHeartbeatBundle\Heartbeat\PCNTLHeartbeatSender;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Messenger\Bridge\Amqp\Transport\AmqpTransport as BaseAmqpTransport;
 use Symfony\Component\Messenger\Bridge\Amqp\Transport\Connection;
 use Symfony\Component\Messenger\Exception\TransportException;
@@ -16,7 +17,8 @@ class AmqpTransport extends BaseAmqpTransport implements HeartbeatConnectionInte
     public function __construct(
         private Connection $connection,
         private PCNTLHeartbeatSender $heartbeatSender,
-        SerializerInterface $serializer
+        SerializerInterface $serializer,
+        private ?LoggerInterface $logger = null,
     ) {
         parent::__construct($this->connection, $serializer);
     }
@@ -38,15 +40,17 @@ class AmqpTransport extends BaseAmqpTransport implements HeartbeatConnectionInte
     public function sendHeartbeat(): void
     {
         try {
-            if (\property_exists($this->connection, 'lastActivityTime')) {
-                $reflection = new \ReflectionClass($this->connection);
-                $property = $reflection->getProperty('lastActivityTime');
-                $property->setAccessible(true);
-                $property->setValue($this->connection, time());
-            }
+            $reflection = new \ReflectionClass($this->connection);
+            $property = $reflection->getProperty('lastActivityTime');
+            $property->setValue($this->connection, time());
 
             $this->getMessageCount();
         } catch (\Throwable $throwable) {
+            $this->logger?->warning(
+                'Exception has been thrown during keepalive.',
+                ['exception' => $throwable]
+            );
+
             if ($throwable instanceof TransportException || $throwable->getPrevious() instanceof TransportException) {
                 throw HeartbeatConnectionLostException::createException($throwable);
             }
