@@ -2,22 +2,25 @@
 
 declare(strict_types=1);
 
-namespace Answear\MessengerHeartbeatBundle\Tests\Unit\Transport;
+namespace Answear\MessengerHeartbeatBundle\Tests\Unit\Service;
 
-use Answear\MessengerHeartbeatBundle\Transport\AmqpTransport;
+use Answear\MessengerHeartbeatBundle\Service\SignalHandler;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Symfony\Bridge\PhpUnit\ClockMock;
 use Symfony\Component\Messenger\Bridge\Amqp\Transport\AmqpFactory;
+use Symfony\Component\Messenger\Bridge\Amqp\Transport\AmqpTransport;
 use Symfony\Component\Messenger\Bridge\Amqp\Transport\Connection;
-use Symfony\Component\Messenger\Envelope;
-use Symfony\Component\Messenger\Transport\Serialization\SerializerInterface;
 
-class TransportTest extends TestCase
+class SignalHandlerTest extends TestCase
 {
-    protected function setUp(): void
+    #[Test]
+    public function skippedIfNoTransports(): void
     {
-        parent::setUp();
+        $handler = new SignalHandler();
+        $handler->keepaliveTransports();
+
+        $this->expectNotToPerformAssertions();
     }
 
     #[Test]
@@ -41,12 +44,11 @@ class TransportTest extends TestCase
         $property = $reflection->getProperty('lastActivityTime');
         self::assertSame(0, $property->getValue($connection));
 
-        $transport = new AmqpTransport(
-            $connection,
-            $this->createMock(SerializerInterface::class),
-        );
+        $handler = new SignalHandler();
+        $handler->keepaliveTransports();
 
-        $transport->keepalive(new Envelope(new \stdClass()));
+        $handler->addTransport(new AmqpTransport($connection));
+        $handler->keepaliveTransports();
 
         $property = $reflection->getProperty('lastActivityTime');
         self::assertGreaterThan(0, $property->getValue($connection));
