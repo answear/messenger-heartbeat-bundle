@@ -8,14 +8,18 @@ use Answear\MessengerHeartbeatBundle\Exception\RabbitMQTransportException;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\Messenger\Event\WorkerMessageFailedEvent;
-use Symfony\Component\Messenger\EventListener\SendFailedMessageToFailureTransportListener as SymfonyToFailureTransportListener;
+use Symfony\Component\Messenger\Event\WorkerMessageSkipEvent;
+use Symfony\Component\Messenger\EventListener\SendFailedMessageToFailureTransportListener as BaseListener;
 use Symfony\Component\Messenger\Exception\RejectRedeliveredMessageException;
 use Symfony\Component\Messenger\Stamp\ErrorDetailsStamp;
 
 class SendFailedMessageToFailureTransportListener implements EventSubscriberInterface
 {
+    /**
+     * @param BaseListener $decoratedSubscriber
+     */
     public function __construct(
-        private SymfonyToFailureTransportListener $decoratedSubscriber,
+        private EventSubscriberInterface $decoratedSubscriber,
         private ?LoggerInterface $logger = null,
     ) {
     }
@@ -43,9 +47,26 @@ class SendFailedMessageToFailureTransportListener implements EventSubscriberInte
         $this->decoratedSubscriber->onMessageFailed($event);
     }
 
+    public function onMessageSkip(WorkerMessageSkipEvent $event): void
+    {
+        $this->decoratedSubscriber->onMessageSkip($event);
+    }
+
     public static function getSubscribedEvents(): array
     {
-        return SymfonyToFailureTransportListener::getSubscribedEvents();
+        $events = [
+            WorkerMessageFailedEvent::class => ['onMessageFailed', -100],
+            WorkerMessageSkipEvent::class => ['onMessageSkip', -100],
+        ];
+        if ($events !== BaseListener::getSubscribedEvents()) {
+            throw new \RuntimeException('Subscribed events are not the same for failure transport listener.');
+        }
+
+        // write array again, not "return $events", due to error highlight
+        return [
+            WorkerMessageFailedEvent::class => ['onMessageFailed', -100],
+            WorkerMessageSkipEvent::class => ['onMessageSkip', -100],
+        ];
     }
 
     private function isRabbitMQTransportException(?ErrorDetailsStamp $stamp): bool
