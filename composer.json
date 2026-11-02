@@ -7,6 +7,7 @@
         "php": "^8.4",
         "ext-amqp": "*",
         "symfony/amqp-messenger": "^7.2|^8.0",
+        "symfony/dependency-injection": "^7.2|^8.0",
         "symfony/http-kernel": "^7.2|^8.0",
         "symfony/messenger": "^7.2|^8.0",
         "symfony/framework-bundle": "^7.2|^8.0"
